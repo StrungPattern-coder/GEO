@@ -1,0 +1,43 @@
+# Code Owners for GEO Project
+# These users/teams will be automatically requested for review when someone opens a PR
+
+# Default owner for everything in the repo
+*       @StrungPattern-coder
+
+# Backend code
+/src/backend/           @StrungPattern-coder
+/src/backend/api/       @StrungPattern-coder
+/src/backend/rag/       @StrungPattern-coder
+/src/backend/search/    @StrungPattern-coder
+/src/backend/graph/     @StrungPattern-coder
+/src/backend/ingest/    @StrungPattern-coder
+
+# Frontend code
+/apps/web/              @StrungPattern-coder
+/apps/web/src/          @StrungPattern-coder
+/apps/web/app/          @StrungPattern-coder
+
+# Configuration files
+*.py                    @StrungPattern-coder
+*.ts                    @StrungPattern-coder
+*.tsx                   @StrungPattern-coder
+requirements.txt        @StrungPattern-coder
+package.json            @StrungPattern-coder
+.env.example            @StrungPattern-coder
+
+# Documentation
+/docs/                  @StrungPattern-coder
+README.md               @StrungPattern-coder
+CONTRIBUTING.md         @StrungPattern-coder
+
+# CI/CD and GitHub workflows
+/.github/               @StrungPattern-coder
+/.github/workflows/     @StrungPattern-coder
+.dockerignore           @StrungPattern-coder
+docker-compose.yml      @StrungPattern-coder
+
+# Scripts
+/scripts/               @StrungPattern-coder
+
+# Tests
+/tests/                 @StrungPattern-coder
