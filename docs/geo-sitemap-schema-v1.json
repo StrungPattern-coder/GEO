@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://geo-protocol.org/schema/v1.0.json",
+  "title": "GEO Sitemap",
+  "description": "Generative Engine Optimization Protocol - Structured data format for AI-first content optimization",
+  "type": "object",
+  "required": ["version", "publisher", "entities", "facts"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "GEO Protocol version"
+    },
+    "publisher": {
+      "type": "object",
+      "required": ["name", "domain"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Publisher name"
+        },
+        "domain": {
+          "type": "string",
+          "format": "hostname",
+          "description": "Publisher primary domain (for verification)"
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether publisher identity has been verified"
+        },
+        "contact": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email for verification"
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Canonical entities published by this source",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Canonical URI for this entity"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["Person", "Organization", "Paper", "Product", "Concept", "Event", "Location", "Other"],
+            "description": "Entity type classification"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {"type": "string", "format": "uri"},
+            "description": "Alternative URIs that refer to this entity"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Type-specific properties",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "description": "Verifiable facts about entities",
+      "items": {
+        "type": "object",
+        "required": ["subject", "predicate", "object", "confidence"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "Entity URI (must match an entity.id or alias)"
+          },
+          "predicate": {
+            "type": "string",
+            "description": "Relationship type (e.g., 'authored', 'worksAt', 'relatesTo')"
+          },
+          "object": {
+            "oneOf": [
+              {"type": "string", "format": "uri"},
+              {"type": "string"},
+              {"type": "number"},
+              {"type": "boolean"}
+            ],
+            "description": "Target entity URI or literal value"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Publisher confidence score (0.0 - 1.0)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when fact was asserted"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {"type": "string", "format": "uri"},
+            "description": "URLs of sources supporting this fact"
+          },
+          "temporal": {
+            "type": "object",
+            "properties": {
+              "validFrom": {"type": "string", "format": "date-time"},
+              "validUntil": {"type": "string", "format": "date-time"}
+            },
+            "description": "Optional temporal validity window"
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "string",
+      "description": "Cryptographic signature (HMAC-SHA256 or Ed25519) of the canonical JSON (publisher.domain + entities + facts)"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created": {"type": "string", "format": "date-time"},
+        "updated": {"type": "string", "format": "date-time"},
+        "expires": {"type": "string", "format": "date-time"},
+        "language": {"type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$"},
+        "license": {"type": "string", "format": "uri"}
+      }
+    }
+  }
+}

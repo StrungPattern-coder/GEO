@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GEO Alpha</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .container { max-width: 860px; margin: auto; }
+      .answer { background: #0b1020; color: #e8f0ff; padding: 1rem; border-radius: 8px; }
+      .facts { margin-top: 1rem; }
+      .fact { padding: .5rem .75rem; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: .5rem; }
+      input, button { font-size: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>GEO Alpha</h1>
+      <p>Ask about AI research. Answers are grounded in cited facts.</p>
+      <form id="ask-form">
+        <input id="q" placeholder="What is llama 3?" size="50" />
+        <button type="submit">Ask</button>
+      </form>
+      <div id="out" style="margin-top:1rem;"></div>
+    </div>
+    <script>
+      const form = document.getElementById('ask-form');
+      const out = document.getElementById('out');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const q = document.getElementById('q').value;
+        out.innerHTML = 'Thinking…';
+        const res = await fetch('http://localhost:8000/ask', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q, max_facts: 8 })
+        });
+        const data = await res.json();
+        const factsHtml = data.facts.map((f, i) => {
+          const score = (f.score !== null && f.score !== undefined) ? ` • score ${Number(f.score).toFixed(2)}` : '';
+          const ts = f.ts ? ` • ${f.ts}` : '';
+          const src = f.source_url ? `<a href="${f.source_url}" target="_blank">source</a>` : '';
+          return `\n<div class="fact"><b>[${i+1}] ${f.predicate}</b> ${f.subject} → ${f.object}<br/>${src}${score}${ts}</div>`;
+        }).join('');
+        out.innerHTML = `<div class="answer">${data.answer}</div><div class="facts">${factsHtml}</div>`;
+      });
+    </script>
+  </body>
+</html>

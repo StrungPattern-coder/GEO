@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "publisher": {
+    "name": "Example Research Lab",
+    "domain": "example-lab.org",
+    "verified": true,
+    "contact": "info@example-lab.org"
+  },
+  "entities": [
+    {
+      "id": "https://example-lab.org/people/alice-smith",
+      "type": "Person",
+      "name": "Dr. Alice Smith",
+      "aliases": [
+        "https://orcid.org/0000-0002-1234-5678",
+        "https://scholar.google.com/citations?user=ABCD1234"
+      ],
+      "properties": {
+        "affiliation": "Example Research Lab",
+        "title": "Senior Researcher",
+        "expertise": ["Machine Learning", "Natural Language Processing"]
+      }
+    },
+    {
+      "id": "https://example-lab.org/papers/geo-protocol-2025",
+      "type": "Paper",
+      "name": "The GEO Protocol: Optimizing Content for Generative Engines",
+      "aliases": [
+        "https://arxiv.org/abs/2501.12345",
+        "https://doi.org/10.1234/example.2025"
+      ],
+      "properties": {
+        "year": 2025,
+        "venue": "International Conference on AI",
+        "keywords": ["GEO", "Generative AI", "Information Retrieval"]
+      }
+    }
+  ],
+  "facts": [
+    {
+      "subject": "https://example-lab.org/papers/geo-protocol-2025",
+      "predicate": "authored",
+      "object": "https://example-lab.org/people/alice-smith",
+      "confidence": 1.0,
+      "timestamp": "2025-01-15T10:00:00Z",
+      "evidence": [
+        "https://example-lab.org/publications/2025/geo-protocol"
+      ]
+    },
+    {
+      "subject": "https://example-lab.org/papers/geo-protocol-2025",
+      "predicate": "title",
+      "object": "The GEO Protocol: Optimizing Content for Generative Engines",
+      "confidence": 1.0,
+      "timestamp": "2025-01-15T10:00:00Z"
+    },
+    {
+      "subject": "https://example-lab.org/papers/geo-protocol-2025",
+      "predicate": "abstract",
+      "object": "We introduce GEO, a protocol for optimizing web content for generative AI engines. Unlike traditional SEO which focuses on ranking, GEO emphasizes becoming a trusted source of truth through structured, verifiable data.",
+      "confidence": 1.0,
+      "timestamp": "2025-01-15T10:00:00Z"
+    },
+    {
+      "subject": "https://example-lab.org/people/alice-smith",
+      "predicate": "worksAt",
+      "object": "Example Research Lab",
+      "confidence": 1.0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "temporal": {
+        "validFrom": "2020-01-01T00:00:00Z"
+      }
+    }
+  ],
+  "signature": "sha256:abcdef1234567890...",
+  "metadata": {
+    "created": "2025-01-15T10:00:00Z",
+    "updated": "2025-10-29T12:00:00Z",
+    "expires": "2026-01-15T10:00:00Z",
+    "language": "en-US",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  }
+}

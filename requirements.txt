@@ -1,0 +1,35 @@
+# Core Backend
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+python-dotenv==1.0.1
+requests==2.32.3
+httpx==0.27.0
+
+# Knowledge Graph
+neo4j==5.25.0
+
+# Ingestion
+feedparser==6.0.11
+beautifulsoup4==4.12.3
+
+# RAG Pipeline
+rank-bm25==0.2.2
+sentence-transformers==3.0.1
+
+# Advanced Ingestion (Phase 2 - Priority 4)
+pdfplumber==0.11.7          # PDF text extraction (primary)
+PyPDF2==3.0.1               # PDF text extraction (fallback)
+requests-cache==1.2.1       # HTTP caching for PDFs
+datasketch==1.6.5           # MinHash LSH for deduplication
+
+# Production Operations (Phase 2 - Option E)
+prometheus-client==0.20.0   # Metrics export for Prometheus
+
+# Testing
+pytest==8.3.2
+
+# Optional LLM Providers (install as needed)
+# ollama==0.3.2
+# openai==1.46.0
+# anthropic==0.34.2
