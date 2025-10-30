@@ -69,8 +69,7 @@ class GraphClient:
         if self._use_memory or not getattr(self, "_driver", None):
             return []
         with self._driver.session() as session:  # type: ignore[attr-defined]
-            from typing import LiteralString
-            return list(session.run(LiteralString(cypher), **params))
+            return list(session.run(cypher, **params))  # type: ignore[arg-type]
 
     def ensure_indexes(self):
         if self._use_memory:
@@ -157,9 +156,23 @@ class GraphClient:
             trust_score = 0.25 * tw + 0.25 * domain_score + 0.15 * corroboration
             
             # Total score: term hits + trust + recency
-            total = hits * 0.5 + trust_score + recency
+            # BOOST recency for recent facts (within 1 year)
+            recency_boost = 1.0
+            try:
+                if ts:
+                    import datetime as _dt
+                    year = int(ts[:4]) if len(ts) >= 4 and ts[:4].isdigit() else None
+                    now_y = _dt.datetime.utcnow().year
+                    age_years = max(0, (now_y - year)) if year else 3
+                    # If published this year or last year, apply 3x boost to recency
+                    if age_years <= 1:
+                        recency_boost = 3.0
+            except:
+                pass
             
-            explain = f"hits={hits}*0.5 + trust={trust_score:.2f} (tw={tw:.2f}, domain={domain_score:.2f}, corr={corroboration_count}) + recency={recency:.2f}"
+            total = hits * 0.5 + trust_score + (recency * recency_boost)
+            
+            explain = f"hits={hits}*0.5 + trust={trust_score:.2f} (tw={tw:.2f}, domain={domain_score:.2f}, corr={corroboration_count}) + recency={recency:.2f}*{recency_boost:.1f}"
             
             return {
                 "score": total,

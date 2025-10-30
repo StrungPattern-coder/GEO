@@ -10,9 +10,23 @@ echo "🚀 Project GEO - Quick Start"
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker is not running. Please start Docker Desktop."
+# Check if Docker is running (multiple detection methods)
+DOCKER_RUNNING=false
+
+# Method 1: Check docker ps
+if docker ps > /dev/null 2>&1; then
+    DOCKER_RUNNING=true
+# Method 2: Check docker info
+elif docker info > /dev/null 2>&1; then
+    DOCKER_RUNNING=true
+# Method 3: Check docker version
+elif docker version > /dev/null 2>&1; then
+    DOCKER_RUNNING=true
+fi
+
+if [ "$DOCKER_RUNNING" = false ]; then
+    echo "❌ Docker is not accessible. Please ensure Docker is running."
+    echo "   Tried: docker ps, docker info, docker version"
     exit 1
 fi
 

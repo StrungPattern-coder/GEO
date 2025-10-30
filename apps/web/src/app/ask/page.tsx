@@ -6,6 +6,8 @@ import { CopyButton } from '@/components/CopyButton';
 import { ExportButton } from '@/components/ExportButton';
 import { LatencyTimer } from '@/components/LatencyTimer';
 import { useToast } from '@/components/ToastProvider';
+import { storage } from '@/lib/accountFreeStorage';
+import { StoragePanel } from '@/components/StoragePanel';
 
 interface ChatMessage {
   id: string;
@@ -26,6 +28,7 @@ export default function AskPage() {
   const [currentFacts, setCurrentFacts] = useState<any[]>([]);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [showStoragePanel, setShowStoragePanel] = useState(false);
   const { showToast } = useToast();
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -33,8 +36,32 @@ export default function AskPage() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('geo_api');
       if (saved) setApiBase(saved);
+      
+      // Load conversation history from IndexedDB
+      loadConversationHistory();
     }
   }, []);
+  
+  // Load conversation history from browser storage
+  const loadConversationHistory = async () => {
+    try {
+      const history = await storage.getConversations(10);
+      if (history.length > 0) {
+        const converted = history.map(conv => ({
+          id: conv.id,
+          query: conv.messages[0]?.content || '',
+          answer: conv.messages[1]?.content || '',
+          facts: conv.facts,
+          startTime: conv.timestamp,
+          endTime: conv.timestamp + 1000
+        }));
+        setChatHistory(converted);
+        showToast(`Loaded ${history.length} previous conversations`, 'info');
+      }
+    } catch (err) {
+      console.error('Failed to load conversation history:', err);
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -110,14 +137,32 @@ export default function AskPage() {
       const end = Date.now();
       
       // Add to chat history
-      setChatHistory(prev => [...prev, {
+      const newMessage = {
         id: messageId,
         query,
         answer: accumulatedAnswer,
         facts,
         startTime: start,
         endTime: end
-      }]);
+      };
+      
+      setChatHistory(prev => [...prev, newMessage]);
+      
+      // Save to browser storage (NO SERVER)
+      try {
+        await storage.saveConversation(
+          [
+            { role: 'user', content: query },
+            { role: 'assistant', content: accumulatedAnswer }
+          ],
+          facts
+        );
+        await storage.addToHistory(query, accumulatedAnswer);
+        showToast('💾 Conversation auto-saved locally', 'success');
+      } catch (err) {
+        console.error('Failed to save conversation:', err);
+        showToast('⚠️ Failed to save conversation', 'error');
+      }
       
       // Clear current state
       setCurrentAnswer('');
@@ -199,13 +244,26 @@ export default function AskPage() {
             ← Home
           </Link>
           {chatHistory.length > 0 && (
-            <button
-              onClick={() => setChatHistory([])}
-              className="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-            >
-              🗑️ Clear Chat
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  if (confirm('Clear chat display? (Stored conversations will remain)')) {
+                    setChatHistory([]);
+                    showToast('Chat display cleared', 'success');
+                  }
+                }}
+                className="text-sm text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+              >
+                🗑️ Clear Display
+              </button>
+            </>
           )}
+          <button
+            onClick={() => setShowStoragePanel(true)}
+            className="text-sm px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          >
+            � Manage Data
+          </button>
         </div>
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
@@ -238,9 +296,28 @@ export default function AskPage() {
             <p className="text-slate-600 dark:text-slate-400 text-lg mb-2">
               💡 Start a conversation with GEO
             </p>
-            <p className="text-slate-500 dark:text-slate-500 text-sm">
+            <p className="text-slate-500 dark:text-slate-500 text-sm mb-4">
               Ask anything and get answers with real-time web sources
             </p>
+            
+            {/* Privacy Notice */}
+            <div className="mt-6 mx-auto max-w-md p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-left">
+              <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
+                🔒 100% Privacy-First
+              </h3>
+              <ul className="text-xs text-green-800 dark:text-green-200 space-y-1">
+                <li>✅ No account required, ever</li>
+                <li>✅ All conversations stored in your browser</li>
+                <li>✅ Nothing sent to any server</li>
+                <li>✅ Export/delete your data anytime</li>
+              </ul>
+              <button
+                onClick={() => setShowStoragePanel(true)}
+                className="mt-3 text-xs text-green-700 dark:text-green-300 hover:underline"
+              >
+                Learn more about data storage →
+              </button>
+            </div>
           </div>
         )}
 
@@ -358,6 +435,11 @@ export default function AskPage() {
 
         <div ref={chatEndRef} />
       </div>
+
+      {/* Storage Management Panel */}
+      {showStoragePanel && (
+        <StoragePanel onClose={() => setShowStoragePanel(false)} />
+      )}
 
       {/* Input Form - Fixed at bottom */}
       <form onSubmit={onSubmit} className="flex gap-2 p-4 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 sticky bottom-0">

@@ -139,12 +139,16 @@ class WebSearcher:
                     source_tag = result_div.find('span', class_='result__url')
                     source = source_tag.get_text(strip=True) if source_tag else url
                     
+                    # Extract date/timestamp from snippet if available
+                    timestamp = self._extract_date_from_text(snippet + " " + title)
+                    
                     if title and url:
                         results.append(SearchResult(
                             title=title,
                             url=url,
                             snippet=snippet or title,
-                            source=source
+                            source=source,
+                            timestamp=timestamp
                         ))
                 except Exception as e:
                     print(f"[WebSearch] Error parsing result: {e}")
@@ -156,6 +160,53 @@ class WebSearcher:
         except Exception as e:
             print(f"[WebSearch] DuckDuckGo search failed: {e}")
             return []
+    
+    def _extract_date_from_text(self, text: str) -> str:
+        """
+        Extract date from text using regex patterns.
+        Looks for dates like: "Mar 3, 2025", "March 2025", "2025-03-03", etc.
+        """
+        import re
+        from datetime import datetime
+        
+        if not text:
+            return ""
+        
+        # Pattern 1: "Mar 3, 2025" or "March 3, 2025"
+        pattern1 = r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})'
+        match1 = re.search(pattern1, text, re.IGNORECASE)
+        if match1:
+            try:
+                date_str = f"{match1.group(1)} {match1.group(2)}, {match1.group(3)}"
+                parsed = datetime.strptime(date_str, "%b %d, %Y")
+                return parsed.strftime("%Y-%m-%d")
+            except:
+                pass
+        
+        # Pattern 2: "3 March 2025" or "3 Mar 2025"
+        pattern2 = r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})'
+        match2 = re.search(pattern2, text, re.IGNORECASE)
+        if match2:
+            try:
+                date_str = f"{match2.group(2)} {match2.group(1)}, {match2.group(3)}"
+                parsed = datetime.strptime(date_str, "%b %d, %Y")
+                return parsed.strftime("%Y-%m-%d")
+            except:
+                pass
+        
+        # Pattern 3: "2025-03-03" (ISO format)
+        pattern3 = r'(\d{4})-(\d{2})-(\d{2})'
+        match3 = re.search(pattern3, text)
+        if match3:
+            return match3.group(0)
+        
+        # Pattern 4: Just year "2025" or "2024" (last resort)
+        pattern4 = r'\b(202[3-9]|203[0-9])\b'
+        match4 = re.search(pattern4, text)
+        if match4:
+            return f"{match4.group(0)}-01-01"  # Default to Jan 1st
+        
+        return ""
     
     def _search_tavily(self, query: str, num_results: int) -> List[SearchResult]:
         """Search using Tavily AI API (requires API key)."""
