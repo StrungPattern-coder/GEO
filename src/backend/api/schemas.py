@@ -21,7 +21,7 @@ class Fact(BaseModel):
 
 class AskRequest(BaseModel):
     query: str
-    max_facts: int = 8
+    max_facts: Optional[int] = None  # If None, dynamically determined based on query complexity
 
 class AskResponse(BaseModel):
     answer: str

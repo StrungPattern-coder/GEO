@@ -1,0 +1,102 @@
+[
+  {
+    "questionText": "What is the worst-case time complexity of a binary search algorithm?",
+    "options": [
+      "O(n)",
+      "O(log n)",
+      "O(n^2)",
+      "O(1)"
+    ],
+    "correctAnswer": "O(log n)"
+  },
+  {
+    "questionText": "Which data structure follows the Last-In, First-Out (LIFO) principle?",
+    "options": [
+      "Queue",
+      "Heap",
+      "Stack",
+      "Linked List"
+    ],
+    "correctAnswer": "Stack"
+  },
+  {
+    "questionText": "Which data structure follows the First-In, First-Out (FIFO) principle?",
+    "options": [
+      "Stack",
+      "Queue",
+      "Tree",
+      "Graph"
+    ],
+    "correctAnswer": "Queue"
+  },
+  {
+    "questionText": "What is the time complexity for adding an element to the end of a singly linked list if you only have a pointer to the head?",
+    "options": [
+      "O(1)",
+      "O(log n)",
+      "O(n)",
+      "O(n log n)"
+    ],
+    "correctAnswer": "O(n)"
+  },
+  {
+    "questionText": "In a Binary Search Tree (BST), which traversal method will result in a sorted list of nodes?",
+    "options": [
+      "Pre-order",
+      "Post-order",
+      "In-order",
+      "Level-order"
+    ],
+    "correctAnswer": "In-order"
+  },
+  {
+    "questionText": "Which of the following sorting algorithms has an average and worst-case time complexity of O(n log n)?",
+    "options": [
+      "Bubble Sort",
+      "Insertion Sort",
+      "Merge Sort",
+      "Quick Sort"
+    ],
+    "correctAnswer": "Merge Sort"
+  },
+  {
+    "questionText": "What is the primary purpose of a Hash Table?",
+    "options": [
+      "To store data in a sorted order",
+      "To implement a hierarchical structure",
+      "To provide fast insertion, deletion, and search operations",
+      "To manage LIFO operations"
+    ],
+    "correctAnswer": "To provide fast insertion, deletion, and search operations"
+  },
+  {
+    "questionText": "Which graph traversal algorithm uses a queue to explore nodes level by level?",
+    "options": [
+      "Depth-First Search (DFS)",
+      "Breadth-First Search (BFS)",
+      "Dijkstra's Algorithm",
+      "Kruskal's Algorithm"
+    ],
+    "correctAnswer": "Breadth-First Search (BFS)"
+  },
+  {
+    "questionText": "A data structure where elements can be inserted or deleted at both ends but not in the middle is called a...?",
+    "options": [
+      "Queue",
+      "Stack",
+      "Priority Queue",
+      "Dequeue (Double-Ended Queue)"
+    ],
+    "correctAnswer": "Dequeue (Double-Ended Queue)"
+  },
+  {
+    "questionText": "What is the time complexity of finding the smallest element in a Min-Heap?",
+    "options": [
+      "O(n)",
+      "O(log n)",
+      "O(1)",
+      "O(n log n)"
+    ],
+    "correctAnswer": "O(1)"
+  }
+]

@@ -278,25 +278,35 @@ class WebSearcher:
             return []
     
     def _search_google(self, query: str, num_results: int) -> List[SearchResult]:
-        """Search using Google Custom Search API (requires API key)."""
-        if not self.api_key:
-            print("[WebSearch] Google API requires API key")
-            return []
+        """
+        Search using Google (supports both free scraping and paid API).
         
+        If GOOGLE_API_KEY is set, uses official Custom Search API.
+        Otherwise, falls back to free HTML scraping.
+        """
+        # Try official API first if API key is available
+        if self.api_key:
+            return self._search_google_api(query, num_results)
+        else:
+            # Fall back to free scraping
+            print("[WebSearch] Using free Google scraping (no API key)")
+            return self._search_google_scrape(query, num_results)
+    
+    def _search_google_api(self, query: str, num_results: int) -> List[SearchResult]:
+        """Search using Google Custom Search API (paid, requires API key + CSE ID)."""
         try:
-            # Note: Also needs GOOGLE_CSE_ID environment variable
             import os
             cse_id = os.getenv("GOOGLE_CSE_ID", "")
             if not cse_id:
-                print("[WebSearch] Google CSE ID not found")
-                return []
+                print("[WebSearch] GOOGLE_CSE_ID not set, falling back to scraping")
+                return self._search_google_scrape(query, num_results)
             
             url = "https://www.googleapis.com/customsearch/v1"
             params = {
                 "key": self.api_key,
                 "cx": cse_id,
                 "q": query,
-                "num": min(num_results, 10)  # Google limits to 10
+                "num": min(num_results, 10)  # Google API limits to 10
             }
             
             response = requests.get(url, params=params, timeout=self.timeout)
@@ -309,14 +319,103 @@ class WebSearcher:
                     title=item.get("title", ""),
                     url=item.get("link", ""),
                     snippet=item.get("snippet", ""),
-                    source=item.get("displayLink", "")
+                    source=item.get("displayLink", ""),
+                    timestamp=self._extract_date_from_text(item.get("snippet", ""))
                 ))
             
-            print(f"[WebSearch] Found {len(results)} results from Google")
+            print(f"[WebSearch] Found {len(results)} results from Google API")
             return results
             
         except Exception as e:
-            print(f"[WebSearch] Google search failed: {e}")
+            print(f"[WebSearch] Google API failed: {e}, trying scraping")
+            return self._search_google_scrape(query, num_results)
+    
+    def _search_google_scrape(self, query: str, num_results: int) -> List[SearchResult]:
+        """
+        Search Google using free HTML scraping (no API key needed).
+        Note: Google may rate-limit this method. Use responsibly.
+        """
+        try:
+            # Google search URL
+            url = "https://www.google.com/search"
+            params = {"q": query, "num": num_results}
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "DNT": "1",
+            }
+            
+            response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            results = []
+            
+            # Parse organic search results
+            # Google uses different div structures, so we try multiple selectors
+            search_divs = soup.find_all('div', class_='g')
+            
+            for div in search_divs[:num_results]:
+                try:
+                    # Extract title and URL
+                    title_tag = div.find('h3')
+                    if not title_tag:
+                        continue
+                    
+                    title = title_tag.get_text(strip=True)
+                    
+                    # Find the link (usually in parent <a> tag)
+                    link_tag = div.find('a', href=True)
+                    if not link_tag:
+                        continue
+                    
+                    url = link_tag['href']
+                    
+                    # Skip non-http links (like javascript:void(0))
+                    if not url.startswith('http'):
+                        continue
+                    
+                    # Extract snippet/description
+                    snippet_divs = div.find_all(['div', 'span'], class_=lambda x: x and ('VwiC3b' in x or 'IsZvec' in x or 'aCOpRe' in x))
+                    snippet = ""
+                    for s_div in snippet_divs:
+                        text = s_div.get_text(strip=True)
+                        if len(text) > len(snippet):
+                            snippet = text
+                    
+                    # If no snippet found, try alternative selectors
+                    if not snippet:
+                        snippet_tag = div.find('div', {'data-sncf': '1'})
+                        if snippet_tag:
+                            snippet = snippet_tag.get_text(strip=True)
+                    
+                    # Extract source domain
+                    cite_tag = div.find('cite')
+                    source = cite_tag.get_text(strip=True) if cite_tag else url.split("//")[-1].split("/")[0]
+                    
+                    # Extract timestamp
+                    timestamp = self._extract_date_from_text(snippet + " " + title)
+                    
+                    if title and url:
+                        results.append(SearchResult(
+                            title=title,
+                            url=url,
+                            snippet=snippet or title,
+                            source=source,
+                            timestamp=timestamp
+                        ))
+                        
+                except Exception as e:
+                    print(f"[WebSearch] Error parsing Google result: {e}")
+                    continue
+            
+            print(f"[WebSearch] Found {len(results)} results from Google (scraping)")
+            return results
+            
+        except Exception as e:
+            print(f"[WebSearch] Google scraping failed: {e}")
             return []
 
 

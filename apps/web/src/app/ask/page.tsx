@@ -87,7 +87,7 @@ export default function AskPage() {
       const res = await fetch(`${apiBase}/ask/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, max_facts: 8 })
+        body: JSON.stringify({ query })  // Let backend determine optimal number of sources
       });
       
       if (!res.ok) throw new Error(`API ${res.status}`);

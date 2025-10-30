@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 try:
     from rank_bm25 import BM25Okapi  # type: ignore
@@ -17,6 +17,7 @@ except Exception:
 from ..graph.client import GraphClient
 from .llm import LLM
 from .query_expansion import QueryExpander
+from .query_analyzer import analyze_query, get_optimal_num_sources
 
 # Real-time web search
 try:
@@ -125,7 +126,30 @@ class RAGPipeline:
         
         return enhanced
 
-    def retrieve(self, query: str, k: int = 8) -> List[Dict]:
+    def retrieve(self, query: str, k: Optional[int] = None) -> List[Dict]:
+        """
+        Retrieve relevant facts from web search.
+        
+        Args:
+            query: User's search query
+            k: Number of sources (if None, dynamically determined)
+            
+        Returns:
+            List of ranked facts/sources
+        """
+        # 🎯 DYNAMIC SOURCE DETERMINATION
+        if k is None:
+            # Analyze query complexity and determine optimal number of sources
+            analysis = analyze_query(query)
+            k = analysis['num_sources']
+            print(f"[Query Analysis] {analysis['reasoning']}")
+            print(f"[Query Analysis] Optimal sources: {k} (confidence: {analysis['confidence']:.2f})")
+        else:
+            print(f"[Query Analysis] Using explicit k={k}")
+        
+        # k is now guaranteed to be int
+        assert k is not None, "k should be determined by now"
+        
         # Query expansion: generate multiple query variants
         queries = [query]
         if self._expander and self.use_query_expansion:
@@ -416,19 +440,36 @@ I'm not just another chatbot—I'm a **verifiable**, **transparent**, and **priv
         else:
             return "I'm GEO, your AI search assistant! 🚀 Ask me anything and I'll search the web in real-time to give you accurate answers with credible sources."
 
-    def answer(self, query: str, k: int = 8) -> Tuple[str, List[Dict]]:
+    def answer(self, query: str, k: Optional[int] = None) -> Tuple[str, List[Dict]]:
+        """
+        Generate answer for a query.
+        
+        Args:
+            query: User's search query
+            k: Number of sources (if None, dynamically determined based on query complexity)
+            
+        Returns:
+            Tuple of (answer, facts)
+        """
         # Check if it's conversational first
         is_conversational, category = self._is_conversational(query)
         if is_conversational:
             return self._get_conversational_response(query, category), []
         
+        # Retrieve with dynamic source determination
         facts = self.retrieve(query, k)
         prompt = TEMPLATE.format(system=SYSTEM_PROMPT, question=query, facts=self.format_facts(facts))
         ans = self.llm.generate(prompt)
         return ans, facts
     
-    def answer_stream(self, query: str, k: int = 8):
-        """Stream answer generation token by token."""
+    def answer_stream(self, query: str, k: Optional[int] = None):
+        """
+        Stream answer generation token by token.
+        
+        Args:
+            query: User's search query
+            k: Number of sources (if None, dynamically determined based on query complexity)
+        """
         # Check if it's conversational first
         is_conversational, category = self._is_conversational(query)
         if is_conversational:
